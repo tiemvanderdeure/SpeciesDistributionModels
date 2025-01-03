@@ -127,3 +127,13 @@ function _predictor_response_from_presence_absence(presences, absences, predicto
     y = [falses(n_absence); trues(n_presence)]
     return (X, y)
 end
+
+macro maybe_threads(flag, expr)
+    quote
+        if $(flag)
+            Threads.@threads $expr
+        else
+            $expr
+        end
+    end |> esc
+end

@@ -110,7 +110,7 @@ function evaluate( # Define this as an extension of MLJBase.evaluate??
         validation = (X, boolean_categorical(y))
     end
 
-    _evaluate(x, measures, train, test, validation)
+    _evaluate(x, measures, train, test)
 end
 
 
@@ -130,9 +130,9 @@ function explain(e::SDMensemble; method, data = data(e).predictor, predictors = 
 end
 
 """
-    predict(SDMobject, newdata; clamp = false, threaded = false, [reducer], [by_group])
+    predict(SDMobject, newdata; clamp = false, threaded = false)
 
-Use an `SDMmachine`, `SDMgroup`, or `SDMensemble` to predict habitat suitability for some data, optionally summarized for the entire ensemble, or for each `SDMgroup`.
+Use an `SDMmachine`, or `SDMensemble` to predict habitat suitability for some data, optionally summarized for the entire ensemble, or for each `SDMgroup`.
 
 `newdata` can be either a `RasterStack`, or a Tables.jl.compatible object. It must have all predictor variables used to train the models in its columns (or layers in case of a RasterStack).
 
@@ -143,21 +143,14 @@ Use an `SDMmachine`, `SDMgroup`, or `SDMensemble` to predict habitat suitability
 - `by_group` is set to `true`, the data is reduced for each `SDMgroup`, if it is set to `false` (the default), it reduced across the entire ensemble.
 
 ## Returns
-If `newdata` is a `RasterStack`, the `predict` returns a `Raster`; otherwise, it returns a `NamedTuple` of `Vectors`, with 
-habitat suitability represented by a floating-point number between 0 and 1.
+If `newdata` is a `RasterStack`, the `predict` return a `Raster`; otherwise, return a `DimArray`.  
+Habitat suitability represented by a floating-point number between 0 and 1.
 """
 function predict(m::SDMmachine, d; clamp = false)
-    _check_data(m, d)
     _reformat_and_predict(m, d, clamp)
 end
-function predict(g::SDMgroup, d; clamp = false, threaded = false, reducer = nothing)
-    _check_data(g, d)
-    _reformat_and_predict(g, d, clamp, reducer, cpu_backend(threaded))
-end
-function predict(e::SDMensemble, d; clamp = false, reducer = nothing, by_group = false, threaded = false)
-    _check_data(e, d)
-    by_group && isnothing(reducer) && error("`by_group` is `true`, but no `reducer` is specified")
-    _reformat_and_predict(e, d, clamp, reducer, by_group, cpu_backend(threaded))
+function predict(e::SDMensemble, d; clamp = false, threaded = false)
+    _reformat_and_predict(e, d, clamp, threaded)
 end
 
 
